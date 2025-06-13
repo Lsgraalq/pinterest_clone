@@ -1,13 +1,32 @@
 "use client"
-import React from 'react'
+import React, { useEffect } from 'react'
 import Image from 'next/image'
-import { CiSearch} from "react-icons/ci";
-import { CiBellOn } from "react-icons/ci";
-import { IoChatboxEllipsesOutline } from "react-icons/io5";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { CiSearch } from "react-icons/ci"
+import { CiBellOn } from "react-icons/ci"
+import { IoChatboxEllipsesOutline } from "react-icons/io5"
+import { useSession } from "next-auth/react"
+import { getFirestore, doc, setDoc } from "firebase/firestore"
+import app from './../Shared/firebaseConfig'
 
 function Header() {
-    const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const db = getFirestore(app)
+
+  useEffect(() => {
+    const saveUserInfo = async () => {
+      if (session?.user?.email) {
+        await setDoc(doc(db, "user", session.user.email), {
+          userName: session.user.name,
+          email: session.user.email,
+          userImage: session.user.image
+        })
+      }
+    }
+
+    if (status === "authenticated") {
+      saveUserInfo()
+    }
+  }, [session, status, db])
   return (
     <div className="flex gap-3 items-center p-6">
       <Image src="/logo.png" alt="logo" width={50} height={50} className='cursor-pointer p-2 rounded-full hover:bg-gray-300'></Image>
